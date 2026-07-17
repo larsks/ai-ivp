@@ -29,7 +29,7 @@
           - wget
           - tar
           - bind-utils
-          - httpd 
+          - httpd
         state: present
 
     - name: Start and enable Apache (httpd)
@@ -88,18 +88,14 @@
             remote_src: yes
 
     - name: Verify Installations
-      shell: "{{ bin_dir }}/{{ item }}"
+      command: "{{ item.0 }}/{{ item.1 }}"
       loop:
-        - "oc version --client"
-        - "openshift-install version"
-        - "helm version --short"
-      register: version_output
-      changed_when: false
-    
-    - name: Verify httpd
-      shell: "{{ sbin_dir }}/{{ item }}"
-      loop:
-        - "httpd -v" # Added httpd verification
+        - ["{{ bin_dir }}", "oc version --client"]
+        - ["{{ bin_dir }}", "openshift-install version"]
+        - ["{{ bin_dir }}", "helm version --short"]
+        - ["{{ sbin_dir }}", "httpd -v"]
+      loop_control:
+        label: "{{ item.1 }}"
       register: version_output
       changed_when: false
 
@@ -107,6 +103,8 @@
       debug:
         msg: "{{ item.stdout }}"
       loop: "{{ version_output.results }}"
+      loop_control:
+        label: "{{ item.item.1 }}"
 
     - name: Cleanup temporary files
       file:
